@@ -7,16 +7,28 @@ SelfFull helps you improve your well-being through personalized coaching and eas
 
 ## Getting Started
 
-### 1. Sign Up & Log In
-- Download the SelfFull app from the official website or app store.
-- Open the app and create your account using your email or social login.
-- Log in with your credentials.
+### 1. Install the App
 
-### 2. Set Up Your Profile
+- Download the SelfFull app from the **App Store** (for iOS devices) or **Google Play** (for Android devices).
+- Search for “SelfFull” and tap **Install**.
+- Once installed, open the app to begin.
+
+---
+
+### 2. Sign In or Sign Up
+
+- If you already have an account, tap **Sign In** and enter your email and password.
+- If you are new, tap **Sign Up** to create an account.
+- **Important:** Use the same email address your coach used to invite you. This ensures your account is linked to your coaching program.
+- Follow the on-screen instructions to complete registration or login.
+
+---
+
+### 3. Set Up Your Profile
 - Fill in your basic information (name, age, preferences).
 - Choose your goals (e.g., stress reduction, productivity, mindfulness).
 
-### 3. Explore the Dashboard
+### 4. Explore the Dashboard
 - View your progress, upcoming sessions, and personalized recommendations.
 - Access quick links to main features.
 
