@@ -15,3 +15,7 @@
 | TC-011  | AI Response Markdown Formatting           | AI response formatted as markdown                            | Double stars (**) appear mid-text       | No               |
 | TC-012  | Previous Button on Edit Instructions      | Previous button navigates to previous step                   | Does nothing when clicked               | No               |
 | TC-013  | Scroll AI Note Details Tab (Phone)        | Can scroll AI Note Details tab on phone                      | Can't scroll                           | No               |
+| TC-014  | Save Void Transcript/Note/Instruction     | Can delete all text and save empty item                      | Can't save when all text deleted        | No               |
+| TC-015  | Quit Without Saving Warning               | Pop-up window appears when leaving without saving changes    | No pop-up window                       | No               |
+| TC-016  | AI Bot Instructions Slider Behavior       | Slider off removes AI Bot instructions, not AI Instructions  | Removes AI Instructions instead         | No               |
+| TC-017  | Like/Request Spam Protection              | Users cannot spam likes or send excessive requests           | Users can spam likes and requests      | No               |
