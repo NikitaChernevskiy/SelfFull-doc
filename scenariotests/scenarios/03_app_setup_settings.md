@@ -11,7 +11,7 @@ The **Settings** screen is the control center for identity, privacy, support, an
 ## Layout & Navigation Requirements (1 – 10)
 
 1. **Single‑column list** – Settings are presented as a vertically scrollable list; no horizontal scrolling on reference viewports (≥ 320 × 568 px).  
-2. **Sticky header** – The top bar contains a back arrow, page title **“My Settings”**, and user avatar thumbnail; header height = 56 dp.  
+2. **Sticky header** – The top bar contains a back arrow, page title **“Settings”**, and user avatar thumbnail; header height = 56 dp.  
 3. **User chip** – Directly under the header, display the signed‑in name (bold) and primary email (sub‑text, 70 % opacity).  
 4. **Section dividers** – Use a 1 dp #E6E6E6 separator and a muted header label (e.g., **Support**); at least 24 dp top padding.  
 5. **Row height** – Each tappable row = 56 dp, with a right‑chevron icon; hit target ≥ 48 × 48 dp.  
@@ -19,6 +19,7 @@ The **Settings** screen is the control center for identity, privacy, support, an
 7. **Dark / Light parity** – Contrast ratio ≥ 4.5 : 1; divider color adapts to theme.  
 8. **Scroll indicators** – Native scrollbar appears on scroll; iOS elastic overscroll allowed.  
 9. **Back navigation** – OS back gesture and header arrow both pop to previous screen without data loss.  
+9. **Row click** - the whole button row should be clickable.
 10. **Latency budget** – Tapping a row must push or present the destination view in < 300 ms (P95).  
 
 ---
@@ -64,14 +65,13 @@ The **Settings** screen is the control center for identity, privacy, support, an
 
 ## Danger Zone Requirements (36 – 45)
 
-36. **Delete Your Profile** – Row styled in **#C62828** (error) text; opens a 3‑step confirmation flow:  
+36. **Delete Your Profile** – Row styled in #C62828 (error) text; opens a 3‑step confirmation flow:  
     1. Password re‑entry (or biometric)  
     2. Context copy of irreversible consequences (≤ 120 chars)  
     3. Final “Delete” button disabled for 5 s countdown  
 37. **Data export option** – Prior to deletion, offer “Download my data” (JSON + media ZIP); link emailed when ready.  
 38. **Cooldown period** – Account is soft‑deleted for 30 days; user can restore via login email link.  
 39. **Push token purge** – On soft delete, backend immediately invalidates push tokens.  
-40. **Analytics** – Emit `deletion_initiated`, `deletion_confirmed`, `deletion_restored`.  
 41. **Rate limit** – One delete attempt per 24 h.  
 42. **Error copy** – If delete fails, show toast ≤ 100 chars; logs sent to Sentry.  
 43. **GDPR log** – Deletion process writes audit trail with user ID hash, timestamp, and scrub status.  
