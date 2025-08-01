@@ -28,14 +28,8 @@ The invitation flow is the **first touch‑point** many clients have with SelfFu
 6. **Send button state**  
    Disabled until at least one valid email + course selected; shows inline spinner on submit.  
 
-7. **Server response**  
-   Endpoint `/api/invitations` returns 201 with `inviteId`, `courseRef`, and `expiresAt`; latency < 700 ms (P95).  
-
 8. **UI feedback**  
-   On success, green toast “Invitation sent” (≤ 2 s) plus line‑item appears in **Pending Invites** list with status “Sent”.  
-
-9. **Analytics**  
-   Emit `invite_sent` with courseRef, emailCount, coachId.  
+   On success, green toast “Invitation sent” (≤ 2 s) plus line‑item appears in **Pending Invites** list with status “Sent”.    
 
 10. **Resend**  
     Coach can resend after 5 min cooldown; status updates to “Resent (Timestamp)”.  
@@ -83,9 +77,6 @@ The invitation flow is the **first touch‑point** many clients have with SelfFu
 23. **Accessibility**  
     Button color contrast ≥ 4.5 : 1; link text not solely color‑coded.  
 
-24. **Analytics**  
-    Web beacon records `email_opened` and `email_click` events (if not disabled by client).  
-
 25. **Security**  
     Token is JWT signed with RS256, payload = inviteId, email, courseRef, exp; expiresAt ≤ 7 days.  
 
@@ -94,7 +85,7 @@ The invitation flow is the **first touch‑point** many clients have with SelfFu
 ## Client Sign‑Up & Onboarding Requirements (26 – 45)
 
 26. **Token validation**  
-    Hitting `/accept` with valid token auto‑prefills email field and locks it read‑only.  
+    Hitting `/accept` with valid token auto‑prefills email field and locks it read‑only.  ..............
 
 27. **Account check**  
     If email already in SelfFull:  
@@ -120,7 +111,7 @@ The invitation flow is the **first touch‑point** many clients have with SelfFu
     Mandatory fields: Avatar (400 × 400, ≤ 2 MB), Display Name (≤ 40 chars), Phone (E.164). “Skip” disabled until complete.  
 
 34. **Data save**  
-    Profile POST `/api/user/profile` latency < 700 ms; optimistic UI shows spinner in Save button.  
+    Profile latency < 700 ms; optimistic UI shows spinner in Save button.  
 
 35. **Finish step**  
     Confirmation screen “You’re all set – jump into your course!” with **Go to Dashboard** button.  
@@ -135,7 +126,7 @@ The invitation flow is the **first touch‑point** many clients have with SelfFu
     All onboarding dialogs support TalkBack/VoiceOver; progress bar announces step name on focus.  
 
 39. **Analytics**  
-    Emit `invite_accepted`, `onboarding_step_completed` (welcome|profile|finish), `onboarding_complete`.  
+    Emit `invite_accepted`.  
 
 40. **Timeouts**  
     If invite token expired during sign‑up (> 7 days), app shows “Invitation expired—contact your coach”.  
@@ -160,7 +151,7 @@ The invitation flow is the **first touch‑point** many clients have with SelfFu
 ## Post‑Acceptance & Dashboard Requirements (46 – 55)
 
 46. **Enrollment record**  
-    Backend creates Enrollment row (`userId`, `courseRef`, `status=active`, `joinedAt`).  
+    Backend creates Enrollment row.  
 
 47. **Client Dashboard**  
     After onboarding, client lands on **My Courses** tab; invited course appears with status “New”.  
@@ -169,10 +160,7 @@ The invitation flow is the **first touch‑point** many clients have with SelfFu
     Device push token uploaded; server subscribes user to course notifications.  
 
 49. **Coach notification**  
-    Coach receives dashboard toast “<ClientName> joined AI Course” and email summary nightly.  
-
-50. **Audit log**  
-    `inviteId` marked `accepted`, timestamp recorded, invite row archived after 30 days.  
+    Coach receives dashboard toast “<ClientName> joined Course” and email summary nightly.  
 
 51. **Resilience**  
     If dashboard fails to load, app retries up to 3 times then shows offline fallback.  
@@ -185,6 +173,3 @@ The invitation flow is the **first touch‑point** many clients have with SelfFu
 
 54. **Accessibility**  
     Course card focusable; “New” badge announced by screen reader.  
-
-55. **Analytics**  
-    Emit `dashboard_loaded` with courseCount; client’s first session duration tracked.  
