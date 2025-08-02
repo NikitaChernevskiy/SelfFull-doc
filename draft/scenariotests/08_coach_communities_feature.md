@@ -1,76 +1,140 @@
-SelfFull universal Mobile App Standards: **Communities (MVP)** Requirements  
-v1.0 – 1 Aug 2025  
+**Date:** 2025‑08‑02  
+**File:** 08_coach_communities_feature.md  
+**Purpose:** Ensure coaches can create, manage, and moderate **Communities**, and that clients can view, post, react, and reply within those communities.
 
 ---
 
-## Purpose  
-The **Communities** module (Coach ↔ Coach / Client) lets users create a group, post thoughts, and invite others to collaborate.  
-This MVP requirements list aligns with today’s UI (see screenshots) and will evolve as the feature matures.
+# Test Scenario – Community Creation & Engagement
+
+## 0  Pre‑conditions
+- Coach is signed‑in and on **My Courses → Community** tab  
+- At least one client exists in the coach’s *Users* list  
+- Stable internet connection  
 
 ---
 
-## Community Creation Requirements (1 – 10)
+## A  Enable Community Tab for Clients
 
-1. **Create New Community CTA** — Purple **“+ Create New Community”** button visible on *Community* tab of **My Courses**.  
-2. **Mandatory fields** — *Name* (≤ 40 chars) and *Description* (≤ 200 chars).  
-3. **Optional field** — *Banner Image* (JPEG/PNG, ≥ 1280 × 360 px, ≤ 2 MB).  
-4. **Inline validation** — Required fields show red asterisk; empty submission disables **Create** button.  
-5. **Invite field** — Multi‑select dropdown pre‑filled with the coach’s own name; additional members can be added before save.  
-7. **Success feedback** — Green toast “Community created”; auto‑redirect to Community list (see § 11).  
-8. **Error copy** — Server errors show red toast ≤ 100 chars.  
-10. **Accessibility** — All form inputs have visible labels; tab order follows Banner Image → Name → Description → Invite Members.
+1. **Toggle “Enable Community Tab for Clients”**  
+   - Default state **OFF** (grey)  
+   - Tap toggle → turns **ON** (colour)  
+   - Success toast *“Community tab enabled for clients”*  
+   - Switching **OFF** again hides Community tab for clients (verify with test client login)  
 
 ---
 
-## Community List & Navigation Requirements (11 – 18)
+## B  Create New Community
 
-11. **Tabs** — *My Quest*, *Direct Chat*, **Community**. Community tab stays highlighted when active.  
-12. **Enable switch** — Toggle **“Enable Community Tab for Clients”** controls visibility in the client app; default **Off**.  
-13. **Community card** — Displays *Name*, *Description* snippet (1 line), and member count.  
-14. **Card action** — Tapping card opens Community page.  
-15. **Empty state** — If 0 communities, show illustration + “Create your first community”.  
-16. **Latencies** — List loads < 1 s on 4 G, 20 items per request.  
-17. **Accessibility** — Card hit area ≥ 48 dp; screen reader reads name, description, member count.  
+1. **Tap “+ Create New Community”**  
+   - *Create New Community* form opens  
 
----
+2. **Banner Image** *(optional)*  
+   - Tap “➕” icon → image picker  
+   - Accepts .jpg / .png, Max 10 MB, Min 600 × 200 px  
+   - Preview thumbnail appears after upload  
 
-## Posting & Reactions Requirements (19 – 27)
+3. **Name***  
+   - Required text field  
+   - Validation: 3 – 60 characters; letters, numbers, spaces, punctuation `. , ? ! -`  
+   - Error “Name is required (3‑60 chars)” if invalid  
 
-19. **Post composer** — Multiline textarea placeholder “Share your thoughts with the community…”, 1–1 000 chars.  
-20. **Add Image (optional)** — Button opens gallery/camera; JPEG/PNG ≤ 2 MB; thumbnail preview appears before post.  
-21. **Post button state** — Disabled until text or image present; shows inline spinner on submit.  
-22. **Post card** — Shows avatar, author name, timestamp (local), body text, optional image, **Delete** link for author.  
-23. **Reactions** — ❤️ Like icon with counter; single‑tap toggles like; optimistic UI.  
-24. **Comments** — Inline reply box “Say your thing…”; replies list under post; order = oldest‑first.  
-25. **Delete** — Author may delete own post/reply; confirmation modal ≤ 120 chars.  
-27. **Accessibility** — Like button toggles `aria-pressed`; comments live region polite.
+4. **Description***  
+   - Required multi‑line field  
+   - Validation: 10 – 300 characters; plain text only (HTML stripped)  
+   - Live counter bottom‑right (`0/300`)  
 
----
+5. **Invite Members**  
+   - Search bar shows existing users after typing ≥ 2 chars  
+   - Tap user → chip appears in list  
+   - Repeat to add multiple members  
+   - **Invite** button sends in‑app notification  
+   - Success toast *“Invitations sent”*  
 
-## Member Management Requirements (28 – 33)
-
-28. **Members icon** — Top‑right people icon opens Members sheet listing names and roles.  
-29. **Inviting after creation** — Members sheet has **Invite** button; enters email(s) → sends invite email with deep link.  
-30. **Member count** — Counter on Community card updates in real time.  
-31. **Leave community** — Coaches/clients can leave; confirmation toast “Left community”.  
-32. **Role** — Creator is **Admin**; other members are **Member**. For MVP, no mod tools beyond delete own posts.  
-
----
-
-## Client Visibility Requirements (34 – 38)
-
-34. **Toggle effect** — When **Enable Community Tab for Clients** is ON, client app shows *Community* tab inside **My Courses**.  
-35. **Client capabilities** — Clients can: view list, open community, create text/image posts, like, comment, leave.  
-36. **Permissions guard** — If toggle OFF, server denies community routes for client role (HTTP 403).  
-37. **Latency parity** — Client list/post latencies match coach targets.  
+6. **Save Community**  
+   - **Save / Create** button enabled when Name & Description valid  
+   - Tap → form closes, Community list refreshes  
+   - New card shows:  
+     - **Name:** <community name>  
+     - **Description:** first 100 chars  
+     - **Members:** *n* members (initially count of invited users)  
 
 ---
 
-## Performance & Compliance Requirements (39 – 45)
+## C  Open & Post in Community
 
-39. **Frame rate** — Scrolling posts ≥ 55 FPS on Pixel 5, iPhone SE 2nd gen.  
-40. **Crash‑free** — < 0.3 % crash rate in Communities module (30‑day rolling).  
-41. **Rate limits** — 30 posts/min/user; 100 likes/min/user; extra -> HTTP 429.  
-42. **Storage** — Images stored on S3 with 30‑day lifecycle to glacier; URLs signed, 24 h expiry.               
-44. **Moderation (basic)** — Posts run through text & image safety filter; blocked content shows “Removed for policy”.  
-45. **GDPR** — On account deletion, posts & images purged ≤ 30 days; group remains with “Deleted User” label.
+1. **Tap community card**  
+   - Community page opens; title and description at top  
+   - **Members** icon top‑right navigates to member list  
+
+2. **Create a post**
+
+| Field | Validation Rules | Expected |
+|-------|------------------|----------|
+| **Post textarea** | Required; 1 – 2 000 characters | “Post To Community” disabled until content present |
+| **Add Image** *(optional)* | .jpg / .png, Max 10 MB | Thumbnail preview under textarea |
+| **Post To Community** button | Enabled when textarea valid | New post appears under **Posts** section |
+
+3. **Post display**  
+   - Avatar, author name, timestamp  
+   - Body text wraps correctly; image thumbnail if attached  
+   - **Heart icon** (outline) with count (default 0)  
+   - Comment bubble icon with count (default 0)  
+   - **Delete** link visible to coach and post author  
+
+---
+
+## D  Post Reactions & Replies
+
+1. **Like a post**  
+   - Tap heart → icon fills colour, count +1  
+   - Tap again → icon outline, count ‑1  
+
+2. **Reply to a post**
+
+| Action | Steps | Expected |
+|--------|-------|----------|
+| **Reply field** | Tap “Say your thing…” | Field expands; placeholder clears |
+| Type reply | 1 – 1 000 chars | “Reply” button enabled |
+| Send reply | Tap **Reply** | Comment appears indented under post, with own heart & delete |
+
+3. **Delete post or comment**  
+   - Tap **Delete** link → confirm dialog *“Delete this post?”* / *“Delete this comment?”*  
+   - **Delete** removes item; counts update  
+
+---
+
+## E  Members Panel
+
+1. **Tap “Members”** icon  
+   - Modal shows list of avatars, names, joined date  
+   - **Remove** button next to each (coach only) → confirm removal  
+   - Removed user cannot access community (verify with client account)  
+
+---
+
+## F  Edit & Delete Community
+
+1. **Return to Community list**  
+   - Tap card menu (⋯) → **Edit / Delete** options  
+
+2. **Edit**  
+   - Opens same form pre‑filled; update fields; **Save** persists changes  
+
+3. **Delete**  
+   - Dialog *“Delete community and all posts?”*  
+   - Checkbox *“I understand”* enables **Delete**  
+   - Card disappears; clients lose access  
+
+---
+
+## 1  Expected Outcome
+- Communities can be enabled/disabled globally by coaches  
+- Creation validates all required fields and image specs  
+- Members receive invitations and gain access  
+- Posts support text, optional image, like/unlike, replies, and deletion  
+- Member list reflects real‑time additions/removals  
+- Editing or deleting a community updates visibility appropriately without residual data  
+
+---
+
+**End of file**

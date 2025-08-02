@@ -1,175 +1,108 @@
- SelfFull universal Mobile App Standards: Coach → Client Course Invitation & Onboarding Requirements  
-v1.0 – 31 July 2025  
+**Date:** 2025‑08‑02  
+**File:** 05_coach_client_invitation.md  
+**Purpose:** Verify that a coach can invite a client by email, that the invitation is delivered with correct links, and that the client can create a standard (non‑coach) account and appear in the coach’s **Users** list.
 
 ---
 
-## Why We Need This Document  
-The invitation flow is the **first touch‑point** many clients have with SelfFull. A broken or confusing experience here translates directly into lost revenue and support tickets. This standard provides a single, measurable contract—covering everything from the coach’s “Invite Client” button to the client’s first visit to the course dashboard—so that Product, Design, Engineering, and QA can ship improvements confidently and auditors can trace the full enrollment lifecycle.
+# Test Scenario – Coach → Client Invitation Flow
+
+## 0  Pre‑conditions
+- Coach is signed‑in and on **Coach Dashboard**  
+- At least one course exists (needed only if the coach plans to assign content)  
+- Client’s email address is not yet registered in SelfFull  
 
 ---
 
-## Coach‑Side Invitation Requirements (1 – 15)
+## A  Coach Sends an Invitation
 
-1. **Invite CTA**  
-   “Invite Client” button appears on the **Users** card and inside the **Course Builder** Access‑Control panel.  
+1. **Open “Invite”**  
+   - Coach taps **Invite** button in the *Users* panel  
+   - *Invite User* modal appears
 
-2. **Course picker**  
-   Invitation modal requires a Course dropdown (searchable, max 20 visible items); default = last edited course.  
+2. **Fill in *Name***  
+   - Required  
+   - 2 – 50 characters  
+   - Letters, spaces, hyphens only  
 
-3. **Email field**  
-   Accepts a single valid RFC 5322 address; real‑time validation; duplicate‑email check against existing users and pending invites.  
+3. **Fill in *Email***  
+   - Required  
+   - Valid address format `local@domain.tld`  
+   - 6 – 254 characters  
 
-4. **Bulk mode**  
-   “Add Another Email” link allows up to 20 addresses; each row independently validated.  
+4. **Toggle “Want to assign any course”**  
+   - Default **OFF**; when **ON**, dropdown shows all existing courses  
+   - Coach may leave **OFF** to invite without course access  
 
-5. **Role confirmation**  
-   Modal displays role badge **Client**; role is immutable for this invite.  
+5. **Tap “Invite”**  
+   - Button disabled until Steps 2‑3 valid  
+   - Success toast *“Invitation sent”*  
+   - New user row appears in *Users* list with status **Pending**  
 
-6. **Send button state**  
-   Disabled until at least one valid email + course selected; shows inline spinner on submit.  
-
-8. **UI feedback**  
-   On success, green toast “Invitation sent” (≤ 2 s) plus line‑item appears in **Pending Invites** list with status “Sent”.    
-
-10. **Resend**  
-    Coach can resend after 5 min cooldown; status updates to “Resent (Timestamp)”.  
-
-11. **Cancel invite**  
-    Coach may cancel before acceptance; confirmation modal ≤ 120 chars.  
-
-12. **Rate limit**  
-    100 invites per coach per 24 h; additional attempts return 429.  
-
-13. **Expiration**  
-    Invites expire after 7 days; cron job marks status “Expired” and emails coach.  
-
-14. **Error copy**  
-    If email fails to enqueue, red toast ≤ 100 chars; list row shows “Error – Retry”.  
-
-15. **Accessibility**  
-    Modal fully keyboard navigable; focus trap within modal; labels exposed for screen readers.  
+6. **Copy‑link panel**  
+   - Modal displays auto‑generated email text with platform URLs (Web, Android, iOS)  
+   - “Copy” icon copies full message to clipboard  
 
 ---
 
-## Email Delivery Requirements (16 – 25)
+## B  Client Receives the Email
 
-16. **Template**  
-    Subject: “Your coach invited you to SelfFull 🏆”; body ≤ 120 words, includes course name, coach name, and **Accept Invite** button.  
+1. **Open email “Invitation from your coach”**  
+   - Subject line correct  
+   - Body contains the same text shown in copy‑link panel  
+   - Three platform links open respective stores / web app without 404  
 
-17. **Deep link**  
-    `https://app.selffull.io/accept?token=<JWT>` opens the mobile app if installed (Universal/Applinks); else web sign‑up.  
-
-18. **SPF/DKIM/DMARC**  
-    Pass alignment; no “via sendgrid.net” warning in Gmail.  
-
-19. **Delivery window**  
-    95 % of messages reach recipient mailbox within 60 s.  
-
-20. **Plain‑text part**  
-    Multi‑part email includes plain‑text fallback with clickable URL.  
-
-21. **Brand assets**  
-    Logo ≤ 40 KB, alt text “SelfFull logo”.  
-
-22. **Unsubscribe footer**  
-    Because this is transactional, only “Contact Support” link is required—no unsubscribe.  
-
-23. **Accessibility**  
-    Button color contrast ≥ 4.5 : 1; link text not solely color‑coded.  
-
-25. **Security**  
-    Token is JWT signed with RS256, payload = inviteId, email, courseRef, exp; expiresAt ≤ 7 days.  
+2. **Verify sender**  
+   - “Notification from SelfFull” as the sender name  
+   - Email address uses `@selffull.io` domain  
 
 ---
 
-## Client Sign‑Up & Onboarding Requirements (26 – 45)
+## C  Client Creates an Account
 
-26. **Token validation**  
-    Hitting `/accept` with valid token auto‑prefills email field and locks it read‑only.  ..............
+1. **Follow the Web link** (or install mobile app and open)  
+   - Landing page shows **Sign In** / **Sign Up** choice  
 
-27. **Account check**  
-    If email already in SelfFull:  
-    * **Logged‑out** – show “Login to accept invite” with password field.  
-    * **Logged‑in** – skip to step 31.  
+2. **Tap “Sign Up”** – *Create Account* form appears  
 
-28. **New user path**  
-    Displays sign‑up form (name, password, locale) with role fixed to **Client**; password rules per AUTH‑02.  
+3. **Complete the form**
 
-29. **Duplicate prevention**  
-    Attempting normal sign‑up at `/signup` with invited email shows banner “We found an invitation—tap to accept”.  
+| Field | Validation Rules | Expected After Input |
+|-------|------------------|----------------------|
+| **Name** | Required; 2 – 50 letters / spaces / hyphens | Green border (valid) |
+| **Email** | Required; matches invited email; valid format; 6 – 254 chars | Green border |
+| **Password** | Required; ≥ 8 chars, ≥ 1 uppercase, ≥ 1 number, ≥ 1 symbol | Strength bar ≥ “Medium” |
+| **Confirm Password** | Required; must equal **Password** | No mismatch error message |
+| **Create a Coach Account** toggle | Must remain **OFF** | Toggle colour stays grey |
 
-30. **Post‑sign‑up redirect**  
-    Successful account creation redirects to `/onboarding/welcome?courseRef=<id>`.  
+4. **Tap “Create Account”**  
+   - Button enabled only when all fields valid  
+   - Account is created; client taken to *Data Privacy* page  
 
-31. **Onboarding overlay**  
-    Shows coach avatar, course name, and benefits list (≤ 3 bullets); primary CTA **Get Started**.  
+5. **Accept Data Privacy**  
+   - “Accept” button enables checklist  
+   - On acceptance, client sees welcome screen “Excited to Meet You!”  
 
-32. **Progress tracker**  
-    3‑step progress bar: *Welcome → Profile → Finish*.  
-
-33. **Profile step**  
-    Mandatory fields: Avatar (400 × 400, ≤ 2 MB), Display Name (≤ 40 chars), Phone (E.164). “Skip” disabled until complete.  
-
-34. **Data save**  
-    Profile latency < 700 ms; optimistic UI shows spinner in Save button.  
-
-35. **Finish step**  
-    Confirmation screen “You’re all set – jump into your course!” with **Go to Dashboard** button.  
-
-36. **Role lock**  
-    Client role cannot be changed during onboard; settings page hides coach‑only controls.  
-
-37. **Re‑entry**  
-    If onboarding interrupted, app resumes at last incomplete step.  
-
-38. **Accessibility**  
-    All onboarding dialogs support TalkBack/VoiceOver; progress bar announces step name on focus.  
-
-39. **Analytics**  
-    Emit `invite_accepted`.  
-
-40. **Timeouts**  
-    If invite token expired during sign‑up (> 7 days), app shows “Invitation expired—contact your coach”.  
-
-41. **Error copy**  
-    Network failures show toast ≤ 100 chars + retry button.  
-
-42. **Rate limit**  
-    Account creation limited to 3 attempts per IP per minute.  
-
-43. **GDPR consent**  
-    Checkbox “I agree to Privacy Policy” required; links to latest doc in webview.  
-
-44. **Localization**  
-    Email and onboarding strings loaded from locale bundles; default en‑US.  
-
-45. **Security audit**  
-    All endpoints require HTTPS; invite token verified server‑side before exposing coach/course data.  
+6. **Tap “Next”**  
+   - Onboarding message (if previously set up by coach)
+   - Minimal profile prompt appears (photo optional, phone optional)  
+   - Skip allowed; client lands on **Client Dashboard**  
 
 ---
 
-## Post‑Acceptance & Dashboard Requirements (46 – 55)
+## D  Post‑registration Checks
 
-46. **Enrollment record**  
-    Backend creates Enrollment row.  
+1. **Coach refreshes *Users* list**  
+   - Client row status changes from **Pending** to **Active**  
+   - If “assign any course” was toggled **ON**, *Courses* column shows “All”  
+   - If a specific course was selected, course name is listed
 
-47. **Client Dashboard**  
-    After onboarding, client lands on **My Courses** tab; invited course appears with status “New”.  
+2. **Client access**  
+   - Client can open *My Courses* and sees any assigned course  
+   - If no course assigned, page shows message “No courses yet – ask your coach”  
 
-48. **Push token**  
-    Device push token uploaded; server subscribes user to course notifications.  
+3. **Re‑invite safeguard**  
+   - Coach attempts to invite same email again → error *“User already exists.”*  
 
-49. **Coach notification**  
-    Coach receives dashboard toast “<ClientName> joined Course” and email summary nightly.  
+---
 
-51. **Resilience**  
-    If dashboard fails to load, app retries up to 3 times then shows offline fallback.  
-
-52. **Logout safety**  
-    Client can log out; invite token cannot be reused after acceptance.  
-
-53. **Delete invite**  
-    If coach cancels invite before acceptance, token returns 410 Gone with explanatory copy.  
-
-54. **Accessibility**  
-    Course card focusable; “New” badge announced by screen reader.  
+**End of file**
