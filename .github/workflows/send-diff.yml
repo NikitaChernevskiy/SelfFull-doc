@@ -1,63 +1,75 @@
-name: Send diff of each commit
+name: Send diff of test_results changes
 
 on:
   push:
-    branches:
-      - "**"
+    # Only run when files under test_results/ are modified, added or deleted
+    paths:
+      - 'test_results/**'
 
 jobs:
   diff_and_send:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout current commit
+      - name: Checkout last two commits
         uses: actions/checkout@v4
         with:
-          fetch-depth: 2  # fetch 2 commits to get previous and current states
+          fetch-depth: 2  # so we can compare HEAD and HEAD^
 
-      - name: Generate diff and send
+      - name: Generate diff for test_results and send if non-empty
         run: |
-          # Get the previous and current commits
-          PREV_COMMIT=$(git rev-parse HEAD^)
-          CURR_COMMIT=$(git rev-parse HEAD)
+          set -e
 
-          echo "Previous commit: $PREV_COMMIT"
-          echo "Current commit:  $CURR_COMMIT"
+          # Identify commits
+          PREV=$(git rev-parse HEAD^)
+          CURR=$(git rev-parse HEAD)
+          echo "Previous commit: $PREV"
+          echo "Current commit:  $CURR"
 
-          # Get list of changed files
-          FILES=$(git diff --name-status "$PREV_COMMIT" "$CURR_COMMIT")
+          # Get changes only under test_results/
+          FILES=$(git diff --name-status "$PREV" "$CURR" -- test_results)
 
+          # Initialize JSON array
           CHANGES_JSON="[]"
 
-          # Loop through each file
+          # Loop through each changed file
           echo "$FILES" | while read -r status path; do
             echo "Processing $status $path"
 
-            # Determine before/after content
             if [ "$status" = "D" ]; then
-              before=$(git show "$PREV_COMMIT:$path" 2>/dev/null | jq -Rs .)
+              before=$(git show "$PREV:$path" 2>/dev/null | jq -Rs .)
               after="null"
             elif [ "$status" = "A" ]; then
               before="null"
-              after=$(git show "$CURR_COMMIT:$path" 2>/dev/null | jq -Rs .)
+              after=$(git show "$CURR:$path" 2>/dev/null | jq -Rs .)
             else
-              before=$(git show "$PREV_COMMIT:$path" 2>/dev/null | jq -Rs .)
-              after=$(git show "$CURR_COMMIT:$path" 2>/dev/null | jq -Rs .)
+              before=$(git show "$PREV:$path" 2>/dev/null | jq -Rs .)
+              after=$(git show "$CURR:$path" 2>/dev/null | jq -Rs .)
             fi
 
-            # Append this change to the array
+            # Append to the changes array
             CHANGES_JSON=$(echo "$CHANGES_JSON" | jq \
               --arg path "$path" \
               --argjson before "$before" \
-              --argjson after "$after" \
+              --argjson after  "$after" \
               '. + [{path: $path, before: $before, after: $after}]'
             )
           done
 
-          # Build the final payload
+          # If there are no entries, exit without sending
+          COUNT=$(echo "$CHANGES_JSON" | jq 'length')
+          if [ "$COUNT" -eq 0 ]; then
+            echo "No changes in test_results/. Skipping notification."
+            exit 0
+          fi
+
+          # Build payload and write to file
           PAYLOAD=$(jq -n --argjson changes "$CHANGES_JSON" '{changes: $changes}')
           echo "$PAYLOAD" > payload.json
+          echo "Payload to send:"
+          echo "$PAYLOAD"
 
-          # Send the payload to Power Automate (full URL including SAS token)
+          # Send to Power Automate (full URL including SAS token)
           curl -X POST "https://2950ac4a77dfe57e8511f5197927f4.10.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/58ade817ec8345da9df9c2327d01bc91/triggers/manual/paths/invoke/?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=UK83WIIRFZvUo78TIyKVQweSpqBw8ELJJj4d51zacEU" \
             -H "Content-Type: application/json" \
             -d @payload.json
