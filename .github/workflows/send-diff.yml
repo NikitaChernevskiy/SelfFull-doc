@@ -2,7 +2,6 @@ name: Send diff of test_results changes
 
 on:
   push:
-    # Only run when files under test_results/ are modified, added or deleted
     paths:
       - 'test_results/**'
 
@@ -14,7 +13,7 @@ jobs:
       - name: Checkout last two commits
         uses: actions/checkout@v4
         with:
-          fetch-depth: 2  # so we can compare HEAD and HEAD^
+          fetch-depth: 2
 
       - name: Generate diff for test_results and send if non-empty
         run: |
@@ -32,8 +31,8 @@ jobs:
           # Initialize JSON array
           CHANGES_JSON="[]"
 
-          # Loop through each changed file
-          echo "$FILES" | while read -r status path; do
+          # Loop through each changed file WITHOUT using a subshell
+          while read -r status path; do
             echo "Processing $status $path"
 
             if [ "$status" = "D" ]; then
@@ -47,14 +46,13 @@ jobs:
               after=$(git show "$CURR:$path" 2>/dev/null | jq -Rs .)
             fi
 
-            # Append to the changes array
             CHANGES_JSON=$(echo "$CHANGES_JSON" | jq \
               --arg path "$path" \
               --argjson before "$before" \
               --argjson after  "$after" \
               '. + [{path: $path, before: $before, after: $after}]'
             )
-          done
+          done <<< "$FILES"
 
           # If there are no entries, exit without sending
           COUNT=$(echo "$CHANGES_JSON" | jq 'length')
@@ -64,12 +62,11 @@ jobs:
           fi
 
           # Build payload and write to file
-          PAYLOAD=$(jq -n --argjson changes "$CHANGES_JSON" '{changes: $changes}')
-          echo "$PAYLOAD" > payload.json
+          echo "$CHANGES_JSON" | jq -n '{changes: .}' > payload.json
           echo "Payload to send:"
-          echo "$PAYLOAD"
+          cat payload.json
 
-          # Send to Power Automate (full URL including SAS token)
+          # Send to Power Automate
           curl -X POST "https://2950ac4a77dfe57e8511f5197927f4.10.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/58ade817ec8345da9df9c2327d01bc91/triggers/manual/paths/invoke/?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=UK83WIIRFZvUo78TIyKVQweSpqBw8ELJJj4d51zacEU" \
             -H "Content-Type: application/json" \
             -d @payload.json
