@@ -1,0 +1,64 @@
+name: Send diff of each commit
+
+on:
+  push:
+    branches:
+      - "**"
+
+jobs:
+  diff_and_send:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout current commit
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2  # fetch 2 commits to get previous and current states
+
+      - name: Generate diff and send
+        run: |
+          # Get the previous commit
+          PREV_COMMIT=$(git rev-parse HEAD^)
+          CURR_COMMIT=$(git rev-parse HEAD)
+
+          echo "Previous commit: $PREV_COMMIT"
+          echo "Current commit: $CURR_COMMIT"
+
+          # Get list of changed files
+          FILES=$(git diff --name-status $PREV_COMMIT $CURR_COMMIT)
+
+          CHANGES_JSON="[]"
+
+          # Loop through each file
+          echo "$FILES" | while read -r status path; do
+            echo "Processing $status $path"
+
+            # Get file content before and after
+            if [ "$status" = "D" ]; then
+              before=$(git show "$PREV_COMMIT:$path" 2>/dev/null | jq -Rs .)
+              after="null"
+            elif [ "$status" = "A" ]; then
+              before="null"
+              after=$(git show "$CURR_COMMIT:$path" 2>/dev/null | jq -Rs .)
+            else
+              before=$(git show "$PREV_COMMIT:$path" 2>/dev/null | jq -Rs .)
+              after=$(git show "$CURR_COMMIT:$path" 2>/dev/null | jq -Rs .)
+            fi
+
+            # Add to JSON array
+            CHANGES_JSON=$(echo "$CHANGES_JSON" | jq \
+              --arg path "$path" \
+              --argjson before "$before" \
+              --argjson after "$after" \
+              '. + [{path: $path, before: $before, after: $after}]'
+            )
+          done
+
+          # Build full payload
+          PAYLOAD=$(jq -n --argjson changes "$CHANGES_JSON" '{changes: $changes}')
+
+          echo "$PAYLOAD" > payload.json
+
+          # Send to your URL
+          curl -X POST https://2950ac4a77dfe57e8511f5197927f4.10.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/58ade817ec8345da9df9c2327d01bc91/triggers/manual/paths/invoke/?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=UK83WIIRFZvUo78TIyKVQweSpqBw8ELJJj4d51zacEU \
+            -H "Content-Type: application/json" \
+            -d @payload.json
