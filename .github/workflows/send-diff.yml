@@ -59,6 +59,4 @@ jobs:
           echo "$PAYLOAD" > payload.json
 
           # Send to your URL
-          curl -X POST https://2950ac4a77dfe57e8511f5197927f4.10.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/58ade817ec8345da9df9c2327d01bc91/triggers/manual/paths/invoke/?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=UK83WIIRFZvUo78TIyKVQweSpqBw8ELJJj4d51zacEU \
-            -H "Content-Type: application/json" \
-            -d @payload.json
+          curl -X POST https://2950ac4a77dfe57e8511f5197927f4.10.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/58ade817ec8345da9df9c2327d01bc91/triggers/manual/paths/invoke/?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=UK83WIIRFZvUo78TIyKVQweSpqBw8ELJJj4d51zacEU -H "Content-Type: application/json" -d @payload.json
