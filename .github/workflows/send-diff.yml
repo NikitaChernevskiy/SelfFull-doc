@@ -1,0 +1,73 @@
+name: Send diff of test_results changes
+
+on:
+  push:
+    paths:
+      - 'test_results/**'
+
+jobs:
+  diff_and_send:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout last two commits
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Generate diff for test_results and send if non-empty
+        run: |
+          set -e
+
+          # 1) Identify the two commits
+          PREV=$(git rev-parse HEAD^)
+          CURR=$(git rev-parse HEAD)
+          echo "Previous commit: $PREV"
+          echo "Current  commit: $CURR"
+
+          # 2) list only changes under test_results/
+          FILES=$(git diff --name-status "$PREV" "$CURR" -- test_results)
+
+          # 3) Initialize an empty JSON array
+          CHANGES_JSON='[]'
+
+          # 4) loop in the main shell (not a subshell)
+          while read -r status path; do
+            echo "Processing $status $path"
+
+            if [[ $status == 'D' ]]; then
+              before=$(git show "$PREV:$path" 2>/dev/null)
+              after=''
+            elif [[ $status == 'A' ]]; then
+              before=''
+              after=$(git show "$CURR:$path" 2>/dev/null)
+            else
+              before=$(git show "$PREV:$path" 2>/dev/null)
+              after=$(git show "$CURR:$path" 2>/dev/null)
+            fi
+
+            # escape and append to our JSON array
+            CHANGES_JSON=$(jq \
+              --arg path "$path" \
+              --arg before "$before" \
+              --arg after "$after" \
+              '. + [{path: $path, before: $before, after: $after}]' \
+              <<< "$CHANGES_JSON"
+            )
+          done <<< "$FILES"
+
+          # 5) if array is empty, bail out
+          COUNT=$(jq 'length' <<< "$CHANGES_JSON")
+          if [[ $COUNT -eq 0 ]]; then
+            echo "No diffs in test_results/. Skipping."
+            exit 0
+          fi
+
+          # 6) build and send payload
+          jq -n --argjson changes "$CHANGES_JSON" '{changes: $changes}' > payload.json
+          echo "👉 Payload to send:"
+          cat payload.json
+
+          curl -X POST "https://2950ac4a77dfe57e8511f5197927f4.10.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/58ade817ec8345da9df9c2327d01bc91/triggers/manual/paths/invoke/?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=UK83WIIRFZvUo78TIyKVQweSpqBw8ELJJj4d51zacEU" \
+            -H "Content-Type: application/json" \
+            -d @payload.json
