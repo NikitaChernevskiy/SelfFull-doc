@@ -32,7 +32,13 @@ jobs:
           CHANGES_JSON='[]'
 
           # 4) loop in the main shell (not a subshell)
-          while read -r status path; do
+          while read -r status path1 path2; do
+            # Handle renamed files: use new path (path2)
+            if [[ $status == R* ]]; then
+              path="$path2"
+            else
+              path="$path1"
+            fi
             echo "Processing $status $path"
 
             if [[ $status == 'D' ]]; then
